@@ -11,7 +11,7 @@ import SwiftUI
 struct owl_libraryApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            SplashWrapperView()
         }
     }
 }
