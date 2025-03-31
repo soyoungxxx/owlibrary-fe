@@ -91,17 +91,33 @@ struct LoginButton: View {
     var buttonColor: String
     var buttonTextColor: String
     var height: CGFloat
+    var imageName: String = ""
     
     var body: some View {
         Button(action: {
             print(buttonLabel + "터치 되었슴다")
         }) {
-            Text(buttonLabel)
-                .foregroundColor(Color(hex: buttonTextColor))
-                .frame(width: 224, height: height)
-                .background(Color(hex: buttonColor))
-                .cornerRadius(5)
-                .font(.system(size:13))
+            ZStack {
+                // 가운데 정렬된 텍스트
+                Text(buttonLabel)
+                    .foregroundColor(Color(hex: buttonTextColor))
+                    .font(.system(size: 13))
+                    .frame(width: 224)
+                            
+                // 이미지가 있을 경우 좌측에 배치
+                if !imageName.isEmpty {
+                    HStack {
+                        Image(imageName)
+                            .resizable()
+                            .frame(width: 18, height: 18)
+                            .padding(.leading, 10)
+                        Spacer()
+                    }
+                }
+            }
+            .frame(width: 224, height: height)
+            .background(Color(hex: buttonColor))
+            .cornerRadius(3)
         }
     }
 }
@@ -134,9 +150,9 @@ struct LoginView: View {
             }
             .padding(.horizontal, 20)
             
-            LoginButton(buttonLabel: "네이버 로그인", buttonColor: "#03C75A", buttonTextColor: "#FFFFFF", height: 40)
+            LoginButton(buttonLabel: "네이버 로그인", buttonColor: "#03C75A", buttonTextColor: "#FFFFFF", height: 40, imageName: "Naver-login")
                 .padding(.top, 10)
-            LoginButton(buttonLabel: "카카오 로그인", buttonColor: "#FEE500", buttonTextColor: "#000000", height: 40)
+            LoginButton(buttonLabel: "카카오 로그인", buttonColor: "#FEE500", buttonTextColor: "#000000", height: 40, imageName: "Kakao-login")
         }
         .padding()
         

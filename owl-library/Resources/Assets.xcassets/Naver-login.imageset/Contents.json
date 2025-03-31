@@ -1,10 +1,12 @@
 {
   "images" : [
     {
+      "filename" : "naver01.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
+      "filename" : "naver02.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
