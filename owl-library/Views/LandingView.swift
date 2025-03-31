@@ -92,10 +92,27 @@ struct LoginButton: View {
     var buttonTextColor: String
     var height: CGFloat
     var imageName: String = ""
+    var pwd: String = "test1234"
+    var id: String = "testuser"
     
     var body: some View {
         Button(action: {
-            print(buttonLabel + "터치 되었슴다")
+            LoginService.shared.login(email: id, password: pwd) { result in
+                switch result {
+                case .success(let data):
+                    print("로그인 성공! \(data)")
+                    // TODO: 토큰 저장 or 화면 전환
+
+                case .pathErr:
+                    print("요청 경로 오류")
+                case .serverErr:
+                    print("서버 오류")
+                case .networkFail:
+                    print("네트워크 실패")
+                default:
+                    print("기타 오류")
+                }
+            }
         }) {
             ZStack {
                 // 가운데 정렬된 텍스트

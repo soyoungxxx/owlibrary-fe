@@ -8,14 +8,12 @@
 import Foundation
 
 struct LoginResponseData : Codable {
-    let data: LoginData?
+    let status: Int
     let message: String
-    let result: String
-    
+    let data: LoginData
 }
 
-// MARK: - DataClass
 struct LoginData : Codable {
     let accessToken: String
-    let refreshToken: String
+    let refreshToken: String?
 }
