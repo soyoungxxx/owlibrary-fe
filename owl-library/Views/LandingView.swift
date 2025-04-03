@@ -1,6 +1,6 @@
 import SwiftUI
 
-
+// MARK: - Hex Color Extension
 extension Color {
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "#", with: "")
@@ -16,10 +16,10 @@ extension Color {
     }
 }
 
+// MARK: - Splash Wrapper View
 struct SplashWrapperView: View {
     @State private var id: String = ""
     @State private var pwd: String = ""
-
     @State private var showLogin = false
 
     var body: some View {
@@ -28,7 +28,6 @@ struct SplashWrapperView: View {
                 .padding(.top, showLogin ? 0 : UIScreen.main.bounds.height / 3)
                 .animation(.easeInOut(duration: 0.8), value: showLogin)
 
-            
             LoginView(id: $id, pwd: $pwd)
                 .opacity(showLogin ? 1 : 0)
                 .offset(y: showLogin ? 0 : 40)
@@ -38,7 +37,7 @@ struct SplashWrapperView: View {
         .background(Color.white.ignoresSafeArea())
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                withAnimation(.easeInOut(duration: 0.8)) {
+                withAnimation {
                     showLogin = true
                 }
             }
@@ -46,6 +45,7 @@ struct SplashWrapperView: View {
     }
 }
 
+// MARK: - Landing View
 struct LandingView: View {
     var body: some View {
         VStack {
@@ -63,11 +63,12 @@ struct LandingView: View {
     }
 }
 
+// MARK: - Login Form Input
 struct LoginFormTextField: View {
     var placeholder: String
     @Binding var text: String
     var isSecure: Bool = false
-    
+
     var body: some View {
         Group {
             if isSecure {
@@ -86,76 +87,82 @@ struct LoginFormTextField: View {
     }
 }
 
-struct LoginButton: View {
-    var buttonLabel: String
-    var buttonColor: String
-    var buttonTextColor: String
+// MARK: - 공통 스타일 버튼 컴포넌트
+struct StyledLoginButton: View {
+    var label: String
+    var color: String
+    var textColor: String
     var height: CGFloat
     var imageName: String = ""
-    var pwd: String = "test1234"
-    var id: String = "testuser"
-    
-    var body: some View {
-        Button(action: {
-            LoginService.shared.login(email: id, password: pwd) { result in
-                switch result {
-                case .success(let data):
-                    print("로그인 성공! \(data)")
-                    // TODO: 토큰 저장 or 화면 전환
+    var action: () -> Void
 
-                case .pathErr:
-                    print("요청 경로 오류")
-                case .serverErr:
-                    print("서버 오류")
-                case .networkFail:
-                    print("네트워크 실패")
-                default:
-                    print("기타 오류")
-                }
-            }
-        }) {
-            ZStack {
-                // 가운데 정렬된 텍스트
-                Text(buttonLabel)
-                    .foregroundColor(Color(hex: buttonTextColor))
-                    .font(.system(size: 13))
-                    .frame(width: 224)
-                            
-                // 이미지가 있을 경우 좌측에 배치
+    var body: some View {
+        Button(action: action) {
+            HStack {
                 if !imageName.isEmpty {
-                    HStack {
-                        Image(imageName)
-                            .resizable()
-                            .frame(width: 18, height: 18)
-                            .padding(.leading, 10)
-                        Spacer()
-                    }
+                    Image(imageName)
+                        .resizable()
+                        .frame(width: 18, height: 18)
+                        .padding(.leading, 10)
                 }
+                Spacer()
+                Text(label)
+                    .foregroundColor(Color(hex: textColor))
+                    .font(.system(size: 13))
+                Spacer()
             }
             .frame(width: 224, height: height)
-            .background(Color(hex: buttonColor))
+            .background(Color(hex: color))
             .cornerRadius(3)
         }
     }
 }
 
+// MARK: - Login View
 struct LoginView: View {
     @Binding var id: String
     @Binding var pwd: String
+    
+    @State private var showAlert = false
+    @State private var alertMessage = ""
+
     var body: some View {
         VStack {
-            LoginFormTextField(placeholder: "아이디를 입력해주세요", text: $id)
+            LoginFormTextField(placeholder: "이메일을 입력해주세요", text: $id)
                 .keyboardType(.emailAddress)
+
             LoginFormTextField(placeholder: "비밀번호를 입력해주세요", text: $pwd, isSecure: true)
-            
-            LoginButton(buttonLabel: "로그인", buttonColor: "#000000", buttonTextColor: "#FFFFFF", height: 34)
-                .padding(15)
-            
+
+            // 일반 로그인 버튼
+            StyledLoginButton(label: "로그인", color: "#000000", textColor: "#FFFFFF", height: 34) {
+                LoginService.shared.login(email: id, password: pwd) { result in
+                    switch result {
+                    case .success(let data):
+                        print("로그인 성공! \(data)")
+                        // TODO: 화면 전환
+                    case .serverErr:
+                        alertMessage = "서버 오류 발생"
+                        showAlert = true
+                    case .networkFail:
+                        alertMessage = "네트워크 연결을 확인해주세요"
+                        showAlert = true
+                    default:
+                        alertMessage = "알 수 없는 오류"
+                        showAlert = true
+                    }
+                }
+            }
+            .alert(isPresented: $showAlert) {
+                Alert(title: Text("로그인 실패"), message: Text(alertMessage), dismissButton: .default(Text("확인")))
+            }
+            .padding(15)
+
+            // 구분선
             HStack {
                 Rectangle()
                     .frame(height: 1)
                     .foregroundColor(.gray)
-                
+
                 Text("또는")
                     .font(.caption)
                     .foregroundColor(.gray)
@@ -166,30 +173,26 @@ struct LoginView: View {
                     .foregroundColor(.gray)
             }
             .padding(.horizontal, 20)
-            
-            LoginButton(buttonLabel: "네이버 로그인", buttonColor: "#03C75A", buttonTextColor: "#FFFFFF", height: 40, imageName: "Naver-login")
-                .padding(.top, 10)
-            LoginButton(buttonLabel: "카카오 로그인", buttonColor: "#FEE500", buttonTextColor: "#000000", height: 40, imageName: "Kakao-login")
+
+            // 소셜 로그인 버튼들
+            StyledLoginButton(label: "네이버 로그인", color: "#03C75A", textColor: "#FFFFFF", height: 40, imageName: "Naver-login") {
+                print("네이버 로그인 클릭됨")
+                // TODO: 네이버 로그인 SDK 연동
+            }
+
+            StyledLoginButton(label: "카카오 로그인", color: "#FEE500", textColor: "#000000", height: 40, imageName: "Kakao-login") {
+                print("카카오 로그인 클릭됨")
+                // TODO: 카카오 로그인 SDK 연동
+            }
         }
         .padding()
-        
+
+        // 하단 링크
         HStack(spacing: 5) {
-            Text("아이디 찾기")
-                .font(.system(size: 12))
-                .foregroundColor(.gray)
-
-            Text("|")
-                .font(.system(size: 12))
-                .foregroundColor(.gray)
-
-            Text("비밀번호 찾기")
-                .font(.system(size: 12))
-                .foregroundColor(.gray)
-
-            Text("|")
-                .font(.system(size: 12))
-                .foregroundColor(.gray)
-
+            Text("아이디 찾기").font(.system(size: 12)).foregroundColor(.gray)
+            Text("|").font(.system(size: 12)).foregroundColor(.gray)
+            Text("비밀번호 찾기").font(.system(size: 12)).foregroundColor(.gray)
+            Text("|").font(.system(size: 12)).foregroundColor(.gray)
             Button(action: {
                 print("회원가입 클릭")
             }) {
@@ -201,7 +204,7 @@ struct LoginView: View {
     }
 }
 
+// MARK: - Preview
 #Preview {
     SplashWrapperView()
 }
-
